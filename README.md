@@ -26,20 +26,19 @@ The system continues operating even when the cloud is unavailable, and automatic
 ✅ Scalable for multiple gates
 
 🧠 System Architecture
-+-------------------+        WebSocket        +----------------------+
-|   Gate Node UI    | <--------------------> |      Cloud API       |
-| (Tkinter + YOLO)  |                        | (FastAPI + WS)       |
-+---------+---------+                        +----------+-----------+
-          |                                                  |
-          | REST (Local API)                                 | PostgreSQL
-          |                                                  |
-+---------v---------+                        +----------v-----------+
-| Local Gate API    |                        |        Redis         |
-| (FastAPI)         |                        | (TTL / PubSub)       |
-+-------------------+                        +----------------------+
-          |
-          | SQLite (offline cache + queue)
-          v
+                                        +-------------------+        WebSocket        +----------------------+
+                                        |   Gate Node UI    | <--------------------> |      Cloud API       |
+                                        | (Tkinter + YOLO)  |                        | (FastAPI + WS)       |
+                                        +---------+---------+                        +----------+-----------+
+                                                  |                                                  |
+                                                  | REST (Local API)                                 | PostgreSQL
+                                                  |                                                  |
+                                        +---------v---------+                        +----------v-----------+
+                                        | Local Gate API    |                        |        Redis         |
+                                        | (FastAPI)         |                        | (TTL / PubSub)       |
+                                        +-------------------+                        +----------------------+
+                                                  |
+                                                  | SQLite (offline cache + queue)
    Local Gate DB
 
 🧩 Components Overview
