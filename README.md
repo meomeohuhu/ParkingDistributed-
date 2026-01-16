@@ -1,245 +1,77 @@
-🚗 Distributed Parking Management System
+Distributed Parking Management System
 
-A distributed, real-time, fault-tolerant parking management system designed for multi-gate environments.
-The system continues operating even when the cloud is unavailable, and automatically syncs when connectivity is restored.
+A distributed, real-time parking management system designed for multi-gate parking facilities, following an offline-first architecture to ensure continuous operation at gate nodes even when the central cloud service is unavailable.
 
-✨ Key Features
+1. Overview
 
-✅ Distributed architecture (Gate Nodes + Cloud)
+This project implements a fault-tolerant parking system with multiple gate nodes connected to a central cloud, focusing on high availability at gate level - strong consistency for slot state - real-time synchronization - safe recovery from network failures - clear separation between Gate Node and Cloud responsibilities.
 
-✅ Real-time updates via WebSocket
+2. Architecture
 
-✅ Offline-first Gate Nodes with local database
+The system is composed of Gate Nodes and a Cloud Server communicating via REST and WebSocket, where each Gate Node operates independently using a local database while synchronizing state with the Cloud Server when available.
 
-✅ OCR License Plate Recognition (YOLO + EasyOCR)
+3. Core Components
+3.1 Gate Node
 
-✅ Slot coordination using Redis TTL (no DB locking)
+Each gate node is a self-contained execution unit responsible for vehicle entry and exit processing - license plate recognition using camera and OCR - slot suggestion based on distance calculation - offline operation using local SQLite storage - forwarding events to the Cloud when connectivity is restored.
 
-✅ Idempotent APIs with event deduplication
+Technologies used in the Gate Node include Python and Tkinter for UI - OpenCV, YOLO and EasyOCR for vision processing - FastAPI for the local API - SQLite for offline persistence - WebSocket client for real-time synchronization.
 
-✅ Admin Dashboard & Security Control UI
+3.2 Cloud Server
 
-✅ Payment support (VietQR / Cash / Manual)
+The Cloud Server acts as the system authority responsible for central slot and vehicle state management - conflict detection and resolution - transaction and fee calculation - real-time broadcast to all connected gates - admin management and reporting services.
 
-✅ Reporting & PDF export
+Technologies used in the Cloud Server include FastAPI for REST APIs - PostgreSQL for persistent storage - Redis for TTL-based coordination and Pub/Sub - WebSocket for real-time communication.
 
-✅ Scalable for multiple gates
-🧩 Components Overview
-1️⃣ Gate Node
+4. Distributed System Design
+4.1 Offline-First Strategy
 
-Tkinter GUI (Gate UI & Security UI)
+Gate Nodes remain fully operational without cloud connectivity by relying on a local SQLite database to store slot state and pending events, which are automatically synchronized with the Cloud when connectivity is restored.
 
-Camera input (OpenCV)
+4.2 Slot Coordination Using Redis TTL
 
-License plate recognition (YOLO + EasyOCR)
+Slot conflicts between multiple gates are prevented using Redis TTL-based reservations instead of database locking, providing non-blocking coordination - automatic expiration - safe concurrent access across distributed nodes.
 
-Local FastAPI server
+4.3 Real-Time Synchronization
 
-SQLite database for offline mode
+The system uses WebSocket instead of polling to deliver real-time slot updates - vehicle events - heartbeat signals - round-trip time measurement for network health monitoring.
 
-WebSocket client to Cloud
+4.4 Idempotency and Deduplication
 
-Responsibilities
+All critical operations support optional event identifiers, with processed events stored centrally to ensure idempotent behavior and safely ignore duplicated or retried requests.
 
-Vehicle IN / OUT
+5. Data Storage
 
-Slot suggestion (distance-based)
+The Cloud database uses PostgreSQL to store slots - vehicles - transactions - payments - processed events - gates - users, while each Gate Node maintains a local SQLite database for local slot cache - offline event queue - temporary vehicle records.
 
-Offline queue when Cloud is down
+6. Security
 
-Best-effort image upload
+The system applies token-based authentication using Bearer tokens - role-based access control for Admin and Guard roles - Cloud-side protection for admin-only APIs - gate identity validation during login and WebSocket connection.
 
-Local-first operations
+7. Payment Support
 
-2️⃣ Cloud Server
+The system supports multiple payment methods including VietQR-based bank transfer - cash payment - manual online confirmation, with payment status tracked and linked to parking transactions.
 
-FastAPI REST API
+8. User Interfaces
 
-WebSocket server (real-time broadcast)
+The Gate Interface provides a real-time slot map - vehicle IN and OUT operations - cloud connectivity and RTT indicators, while the Security Control Interface offers live camera feeds - OCR-assisted processing - dual IN and OUT control panels, and the Admin Dashboard delivers gate monitoring - slot management - transaction history - revenue statistics - PDF report export.
 
-PostgreSQL (main database)
+9. Technology Stack
 
-Redis (coordination + Pub/Sub)
+UI uses Tkinter - backend services use FastAPI - real-time communication is implemented with WebSocket - OCR relies on YOLO and EasyOCR - databases include PostgreSQL and SQLite - Redis is used for coordination - OpenCV and Pillow handle imaging - ReportLab and Matplotlib support reporting and visualization.
 
-Responsibilities
+10. Running the System
 
-Central state management
+The Cloud Server can be started using Docker Compose, while each Gate Node is initialized by creating the local database and launching the gate UI application.
 
-Slot coordination (TTL-based reserve)
+11. Testing Scope
 
-Conflict detection
+Testing covers unit tests for fee calculation and validation - integration tests between Gate Nodes and the Cloud Server - offline and reconnect scenarios - concurrent slot reservation handling - event deduplication and retry behavior.
 
-Transaction processing
+12. Future Work
 
-Fee calculation
+Planned improvements include enhanced OCR accuracy - mobile admin applications - automated payment confirmation - horizontal scaling for cloud services - support for multi-site and multi-tenant deployments.
 
-Reporting & admin management
+13. License
 
-🔄 Distributed Design Highlights
-🔹 Offline-first
-
-Gate continues working when Cloud is offline
-
-Uses SQLite for local slot state & event queue
-
-Syncs automatically when Cloud reconnects
-
-🔹 Redis TTL instead of DB Lock
-
-Slot reservation via SETEX reserve:{slot}
-
-Prevents race conditions between gates
-
-No blocking database locks
-
-🔹 WebSocket instead of Polling
-
-Real-time slot updates
-
-Heartbeat & RTT measurement
-
-Instant UI refresh across all gates
-
-🔹 Idempotency & Deduplication
-
-Every event supports event_id
-
-processed_events table prevents double processing
-
-Safe retries after network failures
-
-💾 Databases
-Cloud
-
-PostgreSQL
-
-slots
-
-vehicles
-
-transactions
-
-payments
-
-processed_events
-
-gates
-
-users
-
-Gate Node
-
-SQLite
-
-local_slots
-
-local_event_queue
-
-local_vehicles
-
-🔐 Security
-
-Bearer Token authentication
-
-Admin-only APIs protected
-
-Gate authentication via Cloud login
-
-WebSocket gate identity verification
-
-💳 Payment Methods
-
-VietQR (QR code generation)
-
-Cash payment
-
-Manual online transfer
-
-Payment status tracking
-
-📊 Admin Dashboard
-
-Real-time slot status
-
-Gate online/offline monitoring
-
-Transaction history
-
-Revenue statistics
-
-PDF report export
-
-Slot CRUD management
-
-🖥️ User Interfaces
-
-Gate Main UI
-
-Slot map (real-time)
-
-Vehicle IN / OUT
-
-Cloud status & RTT
-
-Security Control Room
-
-Live camera view
-
-Dual IN / OUT panels
-
-OCR-assisted operations
-
-Admin Dashboard
-
-Analytics & reports
-
-Slot & gate management
-
-🛠️ Tech Stack
-Layer	Technology
-UI	Tkinter
-Backend	FastAPI
-Realtime	WebSocket
-OCR	YOLO + EasyOCR
-Database	PostgreSQL, SQLite
-Cache / Lock	Redis
-Image	OpenCV, Pillow
-Payment	VietQR
-Reporting	ReportLab
-Charts	Matplotlib
-🚀 How to Run (Simplified)
-Cloud
-docker-compose up
-
-Gate Node
-python init_local_db.py
-python gui_gate.py
-
-🧪 Testing Scope
-
-Unit tests (fee calculation, validation)
-
-Integration tests (Gate ↔ Cloud)
-
-Offline simulation
-
-Realtime sync & conflict tests
-
-Deduplication & retry tests
-
-📈 Future Improvements
-
-License plate accuracy optimization
-
-Mobile app for admin
-
-Auto payment confirmation
-
-Horizontal scaling for Cloud
-
-Multi-tenant parking support
-
-📜 License
-
-This project is for educational & demonstration purposes.
-Feel free to fork, study, and extend.
+This project is intended for educational and demonstration purposes.
