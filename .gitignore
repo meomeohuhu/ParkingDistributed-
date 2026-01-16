@@ -1,0 +1,23 @@
+# Python
+venv/
+venv*/
+__pycache__/
+*.pyc
+
+# Node
+node_modules/
+
+# Build / binary
+*.tar
+*.zip
+*.exe
+*.dll
+*.pyd
+
+# Database / runtime data
+pgdata/
+*.db
+
+# OS
+.DS_Store
+Thumbs.db

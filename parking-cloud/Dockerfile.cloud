@@ -1,0 +1,47 @@
+# ===========================
+# 1) BASE IMAGE PYTHON 3.11
+# ===========================
+FROM python:3.11-slim
+
+# ===========================
+# 2) INSTALL SYSTEM DEPENDENCIES
+# ===========================
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libpq-dev \
+        gcc \
+        && rm -rf /var/lib/apt/lists/*
+
+# ===========================
+# 3) SET WORKDIR
+# ===========================
+WORKDIR /app
+
+# ===========================
+# 4) COPY REQUIREMENTS
+# ===========================
+COPY requirements.txt /app/requirements.txt
+
+# ===========================
+# 5) INSTALL PYTHON DEPENDENCIES
+# ===========================
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ===========================
+# 6) COPY SOURCE CODE
+# ===========================
+COPY . /app
+
+# ===========================
+# 7) CREATE IMAGES FOLDER
+# ===========================
+RUN mkdir -p /app/images/in && \
+    mkdir -p /app/images/out
+
+# ===========================
+# 8) CLOUD API RUN WITH UVICORN
+# ===========================
+EXPOSE 8010
+
+CMD ["uvicorn", "gates_api:app", "--host", "0.0.0.0", "--port", "8010"]

@@ -1,0 +1,48 @@
+# ============================================
+# 1) Base Image Python
+# ============================================
+FROM python:3.11-slim
+
+# ============================================
+# 2) System dependencies
+# ============================================
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        build-essential \
+        libgl1 \
+        libglib2.0-0 \
+        gcc \
+    && rm -rf /var/lib/apt/lists/*
+
+# ============================================
+# 3) Workdir
+# ============================================
+WORKDIR /app
+
+# ============================================
+# 4) Requirements
+# ============================================
+COPY requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir -r requirements.txt
+
+# ============================================
+# 5) Copy Gate Node Source Code
+# ============================================
+COPY . /app
+
+# ============================================
+# 6) Create folders
+# ============================================
+RUN mkdir -p /app/images/in && \
+    mkdir -p /app/images/out
+
+# ============================================
+# 7) Expose Gate API Port
+# ============================================
+EXPOSE 8000
+
+# ============================================
+# 8) Start Gate API
+# ============================================
+CMD ["uvicorn", "gate_app:app", "--host", "0.0.0.0", "--port", "8000"]

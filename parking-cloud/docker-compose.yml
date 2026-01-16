@@ -1,0 +1,88 @@
+version: "3.9"
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: parking_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: parking
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    networks:
+      - parking_net
+
+  redis:
+    image: redis:7
+    container_name: parking_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    networks:
+      - parking_net
+
+  cloud_api:
+    build:
+      context: .          # thư mục parking-cloud
+      dockerfile: Dockerfile.cloud
+    container_name: parking_cloud
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_DB: parking
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      REDIS_URL: redis://redis:6379/0
+      SECRET_TOKEN: secret-key
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./images:/app/images
+    networks:
+      - parking_net
+
+  # =======================================================================
+  # PGADMIN — WEB UI XEM DATABASE TRỰC QUAN (http://localhost:5050)
+  # =======================================================================
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: parking_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    networks:
+      - parking_net
+    depends_on:
+      - postgres
+
+  # =======================================================================
+  # GATE TEMPLATE — TẠO NHIỀU GATE (replicas=0 → không chạy tự động)
+  # =======================================================================
+  gate_template:
+    build:
+      context: ../gate-node
+      dockerfile: Dockerfile.gate
+    restart: always
+    environment:
+      CLOUD_API: http://cloud_api:8010
+      GATE_ID: G_N
+    networks:
+      - parking_net
+    depends_on:
+      - cloud_api
+    deploy:
+      replicas: 0   # Gate không chạy khi không cần
+
+networks:
+  parking_net:
+    driver: bridge

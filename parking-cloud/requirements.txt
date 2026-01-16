@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+psycopg2-binary
+redis
+orjson
+pytz
+python-multipart
+qrcode[pil]
+pillow
